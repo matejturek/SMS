@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -46,11 +47,13 @@ public class MainActivity extends AppCompatActivity {
     EditText username_et;
     EditText password_et;
     Button interval_plus, interval_minus;
-    Button sim1_btn, sim2_btn;
+    RadioButton sim1_rb, sim2_rb;
     int interval = 10;
     int sim = 1;
-
+    ArrayList<Integer> simCardList;
     Button start_stop_btn;
+
+    CheckBox autostart_cb;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Override
@@ -67,25 +70,22 @@ public class MainActivity extends AppCompatActivity {
         username_et = findViewById(R.id.username);
         password_et = findViewById(R.id.password);
         interval = Integer.valueOf(((EditText) findViewById(R.id.interval)).getText().toString());
-        interval_plus = (Button) findViewById(R.id.interval_plus);
-        interval_minus = (Button) findViewById(R.id.interval_minus);
-        sim1_btn = (Button) findViewById(R.id.sim1_btn);
-        sim2_btn = (Button) findViewById(R.id.sim2_btn);
+        interval_plus = findViewById(R.id.interval_plus);
+        interval_minus = findViewById(R.id.interval_minus);
+        sim1_rb =  findViewById(R.id.sim1_rb);
+        sim2_rb = findViewById(R.id.sim2_rb);
         start_stop_btn = findViewById(R.id.start_stop);
+        autostart_cb = findViewById(R.id.autostart_cb);
 
         loadValues();
 
-        final ArrayList<Integer> simCardList = new ArrayList<>();
+        simCardList = new ArrayList<>();
         SubscriptionManager subscriptionManager;
         subscriptionManager = SubscriptionManager.from(MainActivity.this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_PHONE_STATE},
+                    1);
             return;
         }
         final List<SubscriptionInfo> subscriptionInfoList = subscriptionManager
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         /* Zobrazenie hesla */
-        CheckBox cb = (CheckBox)this.findViewById(R.id.show_pass);
+        CheckBox cb = this.findViewById(R.id.show_pass);
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean     b) {
@@ -130,73 +130,79 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        sim1_btn.setOnClickListener(new View.OnClickListener() {
+        sim1_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                sim = 1;
-                sim1_btn.setBackgroundResource(R.drawable.my_button);
-                sim2_btn.setBackgroundResource(R.drawable.my_button_red);
-            }
-        });
-        sim2_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sim = 2;
-                sim1_btn.setBackgroundResource(R.drawable.my_button_red);
-                sim2_btn.setBackgroundResource(R.drawable.my_button);
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    sim = 1;
+                }
             }
         });
 
+        sim2_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    sim = 2;
+                }
+            }
+        });
+        if (started) {
+            start();
+        }
 
-        /* Casovac na pustanie samotneho cyklu appky - ziskava obsah suboru a posiela SMS*/
-        final Timer[] timer = new Timer[1];
         start_stop_btn.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View view) {
-                switchstate();
-                saveValues();
-
-                if (started) {
-                    timer[0] = new Timer();
-                    timer[0].schedule(new TimerTask()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            new Thread(new Runnable() {
-                                public void run() {
-                                    if (started) {
-                                        String server = server_et.getText().toString();
-                                        String path = path_et.getText().toString();
-                                        String username = username_et.getText().toString();
-                                        String password = password_et.getText().toString();
-
-                                        final String line = getFile(server, path, username, password);
-                                        textview.post(new Runnable() {
-                                            public void run() {
-                                                textview.setText(line);
-                                                if (line.equals("ERROR: CANNOT READ FILE")) {
-                                                    textview.setText("Nelze přečíst soubor nebo soubor neexistuje");
-                                                } else {
-                                                    textview.setText(line);
-                                                    parseSMSLine(line);
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        //Do nothing
-                                    }
-                                }
-                            }).start();
-                        }
-                    }, 0, interval * 60000);
-                } else {
-                    timer[0].cancel();
-                }
-
+                start();
             }
         });
+    }
+
+    void start(){
+        /* Casovac na pustanie samotneho cyklu appky - ziskava obsah suboru a posiela SMS*/
+        final Timer[] timer = new Timer[1];
+        switchstate();
+        saveValues();
+
+        if (started) {
+            timer[0] = new Timer();
+            timer[0].schedule(new TimerTask()
+            {
+                @Override
+                public void run()
+                {
+                    new Thread(new Runnable() {
+                        public void run() {
+                            if (started) {
+                                String server = server_et.getText().toString();
+                                String path = path_et.getText().toString();
+                                String username = username_et.getText().toString();
+                                String password = password_et.getText().toString();
+
+                                final String line = getFile(server, path, username, password);
+                                textview.post(new Runnable() {
+                                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
+                                    public void run() {
+                                        textview.setText(line);
+                                        if (line.equals("ERROR: CANNOT READ FILE")) {
+                                            textview.setText("Nelze přečíst soubor nebo soubor neexistuje");
+                                        } else {
+                                            textview.setText(line);
+                                            parseSMSLine(line);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }).start();
+                }
+            }, 0, interval * 60000);
+        } else {
+            timer[0].cancel();
+        }
+
     }
 
     /*
@@ -204,25 +210,21 @@ public class MainActivity extends AppCompatActivity {
     */
     String getFile(String ip, String path, String username, String password) {
         SmbFile file;
-        String line = null;
+        String line;
         try {
             String url = "smb://" + ip + "/" + path;
             NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(null, username, password);
             file = new SmbFile(url, auth);
-            if (file != null) {
-                // Nacitaj prvy riadok
-                BufferedReader reader = new BufferedReader(new InputStreamReader(new SmbFileInputStream(file)));
-                line = reader.readLine();
+            // Nacitaj prvy riadok
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new SmbFileInputStream(file)));
+            line = reader.readLine();
 
-                //Vytvor novy subor (premenuj stary) na format yyyy-MM-dd-HH-mm"
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
-                String currentDateAndTime = sdf.format(new Date());
-                String myPath = file.getPath().substring(0, file.getPath().lastIndexOf("/"));
-                SmbFile smbToFile = new SmbFile(myPath + "/" + currentDateAndTime + ".txt", auth);
-                file.renameTo(smbToFile);
-            } else {
-                return "ERROR: CANNOT READ FILE";
-            }
+            //Vytvor novy subor (premenuj stary) na format yyyy-MM-dd-HH-mm"
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
+            String currentDateAndTime = sdf.format(new Date());
+            String myPath = file.getPath().substring(0, file.getPath().lastIndexOf("/"));
+            SmbFile smbToFile = new SmbFile(myPath + "/" + currentDateAndTime + ".txt", auth);
+            file.renameTo(smbToFile);
         } catch (Exception e) {
             Log.d("ERROR", e.toString());
             return "ERROR: CANNOT READ FILE";
@@ -263,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("pass", password_et.getText().toString());
         editor.putInt("interval", interval);
         editor.putInt("sim", sim);
+        editor.putBoolean("autostart", autostart_cb.isChecked());
         editor.commit();
     }
 
@@ -277,23 +280,24 @@ public class MainActivity extends AppCompatActivity {
         password_et.setText(sharedPref.getString("pass", ""));
         ((EditText)findViewById(R.id.interval)).setText(String.valueOf(sharedPref.getInt("interval", 10)));
         interval = sharedPref.getInt("interval", 10);
+        sim = sharedPref.getInt("sim", 1);
         if (sim == 1) {
-            sim1_btn.setBackgroundResource(R.drawable.my_button);
-            sim2_btn.setBackgroundResource(R.drawable.my_button_red);
+            sim1_rb.setChecked(true);
         } else {
-            sim1_btn.setBackgroundResource(R.drawable.my_button_red);
-            sim2_btn.setBackgroundResource(R.drawable.my_button);
+            sim2_rb.setChecked(true);
         }
+        started = sharedPref.getBoolean("autostart", false);
     }
 
     /*
         Vytvor SMSky a posli ich
      */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     void parseSMSLine(String text) {
         String[] stringArray = text.split(";");
 
         for(int i = 0; i < stringArray.length; i+=2) {
-            SMS sms = new SMS(stringArray[i], stringArray[i+1], sim);
+            SMS sms = new SMS(stringArray[i], stringArray[i+1], simCardList.get(sim));
             sms.sendSMS();
         }
     }
