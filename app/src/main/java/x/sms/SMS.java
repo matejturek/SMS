@@ -11,18 +11,17 @@ public class SMS {
 
     private String number;
     private String text;
-    private int sim;
+    //private int sim;
 
-    public SMS(String number, String text, int sim) {
+    public SMS(String number, String text) {
         this.number = number;
         this.text = text;
-        this.sim = sim;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     void sendSMS() {
         SmsManager sms = SmsManager.getDefault();
-        sms.getSmsManagerForSubscriptionId(this.sim)
-                .sendTextMessage(this.number, null, this.text, null, null);
+       // sms.getSmsManagerForSubscriptionId(this.sim).sendTextMessage(this.number, null, this.text, null, null);
+        sms.sendTextMessage("phoneNo", null, this.text, null, null);
     }
 }

@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     EditText username_et;
     EditText password_et;
     Button interval_plus, interval_minus;
-    RadioButton sim1_rb, sim2_rb;
+    //RadioButton sim1_rb, sim2_rb;
     int interval = 10;
     int sim = 1;
     ArrayList<Integer> simCardList;
@@ -72,28 +72,28 @@ public class MainActivity extends AppCompatActivity {
         interval = Integer.valueOf(((EditText) findViewById(R.id.interval)).getText().toString());
         interval_plus = findViewById(R.id.interval_plus);
         interval_minus = findViewById(R.id.interval_minus);
-        sim1_rb =  findViewById(R.id.sim1_rb);
-        sim2_rb = findViewById(R.id.sim2_rb);
+        //sim1_rb =  findViewById(R.id.sim1_rb);
+        //sim2_rb = findViewById(R.id.sim2_rb);
         start_stop_btn = findViewById(R.id.start_stop);
         autostart_cb = findViewById(R.id.autostart_cb);
 
         loadValues();
 
-        simCardList = new ArrayList<>();
-        SubscriptionManager subscriptionManager;
-        subscriptionManager = SubscriptionManager.from(MainActivity.this);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_PHONE_STATE},
-                    1);
-            return;
-        }
-        final List<SubscriptionInfo> subscriptionInfoList = subscriptionManager
-                .getActiveSubscriptionInfoList();
-        for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
-            int subscriptionId = subscriptionInfo.getSubscriptionId();
-            simCardList.add(subscriptionId);
-        }
+//        simCardList = new ArrayList<>();
+//        SubscriptionManager subscriptionManager;
+//        subscriptionManager = SubscriptionManager.from(MainActivity.this);
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(MainActivity.this,
+//                    new String[]{Manifest.permission.READ_PHONE_STATE},
+//                    1);
+//            return;
+//        }
+//        final List<SubscriptionInfo> subscriptionInfoList = subscriptionManager
+//                .getActiveSubscriptionInfoList();
+//        for (SubscriptionInfo subscriptionInfo : subscriptionInfoList) {
+//            int subscriptionId = subscriptionInfo.getSubscriptionId();
+//            simCardList.add(subscriptionId);
+//        }
 
 
         /* Zobrazenie hesla */
@@ -130,23 +130,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        sim1_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    sim = 1;
-                }
-            }
-        });
-
-        sim2_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    sim = 2;
-                }
-            }
-        });
+//        sim1_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                if (b) {
+//                    sim = 1;
+//                }
+//            }
+//        });
+//
+//        sim2_rb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                if (b) {
+//                    sim = 2;
+//                }
+//            }
+//        });
         if (started) {
             start();
         }
@@ -280,12 +280,12 @@ public class MainActivity extends AppCompatActivity {
         password_et.setText(sharedPref.getString("pass", ""));
         ((EditText)findViewById(R.id.interval)).setText(String.valueOf(sharedPref.getInt("interval", 10)));
         interval = sharedPref.getInt("interval", 10);
-        sim = sharedPref.getInt("sim", 1);
-        if (sim == 1) {
-            sim1_rb.setChecked(true);
-        } else {
-            sim2_rb.setChecked(true);
-        }
+//        sim = sharedPref.getInt("sim", 1);
+//        if (sim == 1) {
+//            sim1_rb.setChecked(true);
+//        } else {
+//            sim2_rb.setChecked(true);
+//        }
         started = sharedPref.getBoolean("autostart", false);
     }
 
@@ -297,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
         String[] stringArray = text.split(";");
 
         for(int i = 0; i < stringArray.length; i+=2) {
-            SMS sms = new SMS(stringArray[i], stringArray[i+1], simCardList.get(sim));
+            SMS sms = new SMS(stringArray[i], stringArray[i+1]);
             sms.sendSMS();
         }
     }
